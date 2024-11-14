@@ -5,10 +5,17 @@ export const msalConfig: Configuration = {
     clientId: import.meta.env.VITE_AZURE_CLIENT_ID,
     authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID}`,
     redirectUri: window.location.origin,
+    navigateToLoginRequestUrl: true,
   },
   cache: {
     cacheLocation: "sessionStorage",
     storeAuthStateInCookie: false,
+  },
+  system: {
+    allowNativeBroker: false, // Disables WAM broker
+    windowHashTimeout: 60000,
+    iframeHashTimeout: 6000,
+    loadFrameTimeout: 0,
   },
 };
 
@@ -19,6 +26,7 @@ export const loginRequest: PopupRequest = {
     "Sites.Read.All",
     "Sites.ReadWrite.All"
   ],
+  prompt: "select_account",
 };
 
 export const graphConfig = {
