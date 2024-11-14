@@ -1,10 +1,6 @@
 interface SharePointConfig {
   siteUrl: string;
   listName: string;
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
 }
 
 export const submitToSharePoint = async (data: any, config: SharePointConfig) => {
@@ -15,8 +11,7 @@ export const submitToSharePoint = async (data: any, config: SharePointConfig) =>
 };
 
 export const getSharePointItems = async (config: SharePointConfig) => {
-  // Placeholder for fetching items from SharePoint with date filtering
-  // You'll need to implement the actual SharePoint REST API or Graph API calls here
+  // Placeholder for fetching items from SharePoint
   console.log('Fetching from SharePoint:', config);
   return [];
 };
