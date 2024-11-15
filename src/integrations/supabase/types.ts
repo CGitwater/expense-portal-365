@@ -9,6 +9,207 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      expense_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          expense_id: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          expense_id?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          expense_id?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_comments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_requests: {
+        Row: {
+          amount: number
+          budget_code: string | null
+          client_name: string | null
+          created_at: string | null
+          date_required: string | null
+          date_submitted: string | null
+          department: string | null
+          expense_type: string | null
+          id: string
+          payment_type: string | null
+          project_ticket: string | null
+          reason: string | null
+          receipt_urls: string[] | null
+          status: Database["public"]["Enums"]["expense_status"] | null
+          transaction_date: string | null
+          type: Database["public"]["Enums"]["expense_type"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          budget_code?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          date_required?: string | null
+          date_submitted?: string | null
+          department?: string | null
+          expense_type?: string | null
+          id?: string
+          payment_type?: string | null
+          project_ticket?: string | null
+          reason?: string | null
+          receipt_urls?: string[] | null
+          status?: Database["public"]["Enums"]["expense_status"] | null
+          transaction_date?: string | null
+          type: Database["public"]["Enums"]["expense_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          budget_code?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          date_required?: string | null
+          date_submitted?: string | null
+          department?: string | null
+          expense_type?: string | null
+          id?: string
+          payment_type?: string | null
+          project_ticket?: string | null
+          reason?: string | null
+          receipt_urls?: string[] | null
+          status?: Database["public"]["Enums"]["expense_status"] | null
+          transaction_date?: string | null
+          type?: Database["public"]["Enums"]["expense_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_submissions: {
+        Row: {
+          created_at: string | null
+          form_data: Json
+          form_id: string
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          form_data: Json
+          form_id: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          form_data?: Json
+          form_id?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mileage_claims: {
+        Row: {
+          created_at: string | null
+          expense_id: string | null
+          from_postcode: string
+          id: string
+          journey_type: string
+          rate: number
+          single_journey_miles: number
+          ticket_number: string | null
+          to_postcode: string
+          total_amount: number
+          total_miles: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expense_id?: string | null
+          from_postcode: string
+          id?: string
+          journey_type: string
+          rate: number
+          single_journey_miles: number
+          ticket_number?: string | null
+          to_postcode: string
+          total_amount: number
+          total_miles: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expense_id?: string | null
+          from_postcode?: string
+          id?: string
+          journey_type?: string
+          rate?: number
+          single_journey_miles?: number
+          ticket_number?: string | null
+          to_postcode?: string
+          total_amount?: number
+          total_miles?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mileage_claims_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           can_create_forms: boolean | null
@@ -79,6 +280,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      expense_status: "draft" | "pending" | "approved" | "declined"
+      expense_type: "mileage" | "prepaid" | "general"
       user_role: "admin" | "user"
     }
     CompositeTypes: {
