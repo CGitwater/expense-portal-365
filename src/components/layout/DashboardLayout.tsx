@@ -32,6 +32,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             >
               Admin Portal
             </Link>
+            {location.pathname.includes('/admin') && (
+              <>
+                <Link
+                  to="/admin/form-builder"
+                  className="transition-colors hover:text-expense-600 text-expense-500"
+                >
+                  Form Builder
+                </Link>
+                <Link
+                  to="/admin/settings"
+                  className="transition-colors hover:text-expense-600 text-expense-500"
+                >
+                  Settings
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
