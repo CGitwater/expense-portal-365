@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DashboardLayout from "./components/layout/DashboardLayout";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
+import Login from "./pages/auth/Login";
 import ExpenseForm from "./pages/employee/ExpenseForm";
 import TravelRequest from "./pages/employee/TravelRequest";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -22,11 +24,33 @@ const App = () => (
         <DashboardLayout>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/employee/expenses" element={<ExpenseForm />} />
             <Route path="/employee/travel" element={<TravelRequest />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/settings" element={<Settings />} />
-            <Route path="/admin/form-builder" element={<FormBuilder />} />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/form-builder"
+              element={
+                <ProtectedRoute>
+                  <FormBuilder />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </DashboardLayout>
       </BrowserRouter>

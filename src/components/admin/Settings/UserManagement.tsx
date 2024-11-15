@@ -63,7 +63,7 @@ export const UserManagement = () => {
       const { error } = await supabase.from("users").insert({
         email: newUser.email,
         password_hash: newUser.password, // In a real app, you'd hash this
-        role: newUser.role,
+        role: newUser.role as "admin" | "user",
       });
 
       if (error) throw error;
