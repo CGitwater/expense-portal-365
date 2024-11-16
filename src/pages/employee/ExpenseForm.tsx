@@ -4,122 +4,204 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { submitToSharePoint } from '@/services/sharepoint';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { supabase } from "@/integrations/supabase/client";
 
 const ExpenseForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<FileList | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await submitToSharePoint(new FormData(e.target as HTMLFormElement), {
-        siteUrl: 'your-sharepoint-site-url',
-        listName: 'ExpenseClaims'
-      });
+      const formData = new FormData(e.target as HTMLFormElement);
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        throw new Error("Not authenticated");
+      }
+
+      // Upload receipts if any
+      const receiptUrls = [];
+      if (files) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
+          
+          const { data, error } = await supabase.storage
+            .from('receipts')
+            .upload(fileName, file);
+            
+          if (error) throw error;
+          if (data) receiptUrls.push(data.path);
+        }
+      }
+
+      // Insert expense request
+      const { error } = await supabase
+        .from('expense_requests')
+        .insert({
+          user_id: session.user.id,
+          type: 'expense',
+          amount: formData.get('amount'),
+          department: formData.get('department'),
+          transaction_date: formData.get('transactionDate'),
+          payment_type: formData.get('paymentType'),
+          reason: formData.get('reason'),
+          receipt_urls: receiptUrls,
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
-        description: "Your expense claim has been submitted.",
+        description: "Expense claim submitted successfully.",
       });
       (e.target as HTMLFormElement).reset();
+      setFiles(null);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to submit expense claim. Please try again.",
+        description: "Failed to submit expense claim.",
         variant: "destructive",
       });
     }
     setLoading(false);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (fileList && fileList.length > 10) {
+      toast({
+        title: "Error",
+        description: "Maximum 10 files allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+    setFiles(fileList);
+  };
+
   return (
-    <div className="form-container max-w-2xl mx-auto">
-      <div className="glass-card p-8 rounded-lg">
-        <h1 className="text-3xl font-semibold text-expense-800 mb-6">Submit Expense Claim</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="form-field space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              name="description"
-              required
-              className="w-full"
-              placeholder="Brief description of the expense"
-            />
-          </div>
-          
-          <div className="form-field space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
-              id="amount"
-              name="amount"
-              type="number"
-              step="0.01"
-              required
-              className="w-full"
-              placeholder="0.00"
-            />
-          </div>
-          
-          <div className="form-field space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              required
-              className="w-full"
-            />
-          </div>
-          
-          <div className="form-field space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <select
-              id="category"
-              name="category"
-              className="w-full rounded-md border border-input bg-background px-3 py-2"
-              required
-            >
-              <option value="">Select a category</option>
-              <option value="travel">Travel</option>
-              <option value="meals">Meals</option>
-              <option value="supplies">Supplies</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          
-          <div className="form-field space-y-2">
-            <Label htmlFor="notes">Additional Notes</Label>
-            <Textarea
-              id="notes"
-              name="notes"
-              className="w-full"
-              placeholder="Any additional details..."
-            />
-          </div>
-          
-          <div className="form-field space-y-2">
-            <Label htmlFor="receipt">Receipt</Label>
-            <Input
-              id="receipt"
-              name="receipt"
-              type="file"
-              accept="image/*,.pdf"
-              className="w-full"
-            />
-          </div>
-          
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? "Submitting..." : "Submit Expense Claim"}
-          </Button>
-        </form>
-      </div>
-    </div>
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="date">Date</Label>
+          <Input
+            type="date"
+            id="date"
+            name="date"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            type="text"
+            id="name"
+            name="name"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="department">Department</Label>
+          <Select name="department">
+            <SelectTrigger>
+              <SelectValue placeholder="Select department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="it">IT</SelectItem>
+              <SelectItem value="hr">HR</SelectItem>
+              <SelectItem value="finance">Finance</SelectItem>
+              <SelectItem value="sales">Sales</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            type="email"
+            id="email"
+            name="email"
+            required
+            disabled
+            value="user@example.com" // This will be populated from Microsoft 365 login
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="transactionDate">Date of Transaction</Label>
+          <Input
+            type="date"
+            id="transactionDate"
+            name="transactionDate"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="paymentType">Type of Payment</Label>
+          <Select name="paymentType">
+            <SelectTrigger>
+              <SelectValue placeholder="Select payment type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cash">Cash</SelectItem>
+              <SelectItem value="personal">Personal Card</SelectItem>
+              <SelectItem value="corporate">Corporate Card</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="amount">Amount Requested (£)</Label>
+          <Input
+            type="number"
+            id="amount"
+            name="amount"
+            step="0.01"
+            required
+            min="0"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="reason">Reason for Purchase</Label>
+          <Textarea
+            id="reason"
+            name="reason"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="receipt">Receipt Upload</Label>
+          <Input
+            type="file"
+            id="receipt"
+            name="receipt"
+            accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,image/*"
+            multiple
+            onChange={handleFileChange}
+          />
+          <p className="text-sm text-gray-500">
+            Supported files: Word, Excel, PPT, PDF, and images. Max 10 files, 100MB each.
+          </p>
+        </div>
+
+        <Button type="submit" disabled={loading}>
+          {loading ? "Submitting..." : "Submit Expense Claim"}
+        </Button>
+      </form>
+    </Card>
   );
 };
 

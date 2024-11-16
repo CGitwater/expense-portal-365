@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import ExpenseForm from "./pages/employee/ExpenseForm";
 import TravelRequest from "./pages/employee/TravelRequest";
+import PrepaidRequest from "./pages/employee/PrepaidRequest";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Settings from "./pages/admin/Settings";
 import { FormBuilder } from "./components/admin/FormBuilder/FormBuilder";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/employee/expenses" element={<ExpenseForm />} />
             <Route path="/employee/travel" element={<TravelRequest />} />
+            <Route path="/employee/prepaid" element={<PrepaidRequest />} />
             <Route
               path="/admin/dashboard"
               element={
