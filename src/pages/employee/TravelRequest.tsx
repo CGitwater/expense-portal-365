@@ -7,6 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from '@/integrations/supabase/types';
+
+type ExpenseRequest = Database['public']['Tables']['expense_requests']['Insert'];
+type MileageClaim = Database['public']['Tables']['mileage_claims']['Insert'];
 
 const TravelRequest = () => {
   const { toast } = useToast();
@@ -31,35 +35,39 @@ const TravelRequest = () => {
       }
 
       // Create expense request first
+      const expenseData: ExpenseRequest = {
+        user_id: session.user.id,
+        type: 'mileage',
+        amount: calculateTotalMiles() * rate,
+        reason: formData.get('reason')?.toString(),
+        client_name: formData.get('clientName')?.toString(),
+        date_submitted: new Date().toISOString(),
+      };
+
       const { data: expenseData, error: expenseError } = await supabase
         .from('expense_requests')
-        .insert({
-          user_id: session.user.id,
-          type: 'mileage',
-          amount: calculateTotalMiles() * rate,
-          reason: formData.get('reason'),
-          client_name: formData.get('clientName'),
-          date_submitted: new Date().toISOString(),
-        })
+        .insert(expenseData)
         .select()
         .single();
 
       if (expenseError || !expenseData) throw expenseError;
 
       // Create mileage claim
+      const mileageData: MileageClaim = {
+        expense_id: expenseData.id,
+        from_postcode: formData.get('fromPostCode')?.toString() || '',
+        to_postcode: formData.get('toPostCode')?.toString() || '',
+        single_journey_miles: singleJourneyMiles,
+        journey_type: journeyType,
+        rate: rate,
+        total_miles: calculateTotalMiles(),
+        total_amount: calculateTotalMiles() * rate,
+        ticket_number: formData.get('ticketNumber')?.toString(),
+      };
+
       const { error: mileageError } = await supabase
         .from('mileage_claims')
-        .insert({
-          expense_id: expenseData.id,
-          from_postcode: formData.get('fromPostCode'),
-          to_postcode: formData.get('toPostCode'),
-          single_journey_miles: singleJourneyMiles,
-          journey_type: journeyType,
-          rate: rate,
-          total_miles: calculateTotalMiles(),
-          total_amount: calculateTotalMiles() * rate,
-          ticket_number: formData.get('ticketNumber'),
-        });
+        .insert(mileageData);
 
       if (mileageError) throw mileageError;
 

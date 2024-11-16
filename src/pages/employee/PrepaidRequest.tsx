@@ -7,6 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from '@/integrations/supabase/types';
+
+type ExpenseRequest = Database['public']['Tables']['expense_requests']['Insert'];
 
 const PrepaidRequest = () => {
   const { toast } = useToast();
@@ -23,19 +26,21 @@ const PrepaidRequest = () => {
         throw new Error("Not authenticated");
       }
 
+      const expenseData: ExpenseRequest = {
+        user_id: session.user.id,
+        type: 'prepaid',
+        amount: Number(formData.get('amountRequired')),
+        date_required: formData.get('dateRequired')?.toString(),
+        client_name: formData.get('clientName')?.toString(),
+        reason: formData.get('reason')?.toString(),
+        project_ticket: formData.get('projectTicket')?.toString(),
+        budget_code: formData.get('budgetCode')?.toString(),
+        expense_type: formData.get('expenseType')?.toString(),
+      };
+
       const { error } = await supabase
         .from('expense_requests')
-        .insert({
-          user_id: session.user.id,
-          type: 'prepaid',
-          amount: formData.get('amountRequired'),
-          date_required: formData.get('dateRequired'),
-          client_name: formData.get('clientName'),
-          reason: formData.get('reason'),
-          project_ticket: formData.get('projectTicket'),
-          budget_code: formData.get('budgetCode'),
-          expense_type: formData.get('expenseType'),
-        });
+        .insert(expenseData);
 
       if (error) throw error;
 

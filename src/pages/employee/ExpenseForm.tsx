@@ -7,6 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from '@/integrations/supabase/types';
+
+type ExpenseRequest = Database['public']['Tables']['expense_requests']['Insert'];
 
 const ExpenseForm = () => {
   const { toast } = useToast();
@@ -42,18 +45,20 @@ const ExpenseForm = () => {
       }
 
       // Insert expense request
+      const expenseData: ExpenseRequest = {
+        user_id: session.user.id,
+        type: 'general',
+        amount: Number(formData.get('amount')),
+        department: formData.get('department')?.toString(),
+        transaction_date: formData.get('transactionDate')?.toString(),
+        payment_type: formData.get('paymentType')?.toString(),
+        reason: formData.get('reason')?.toString(),
+        receipt_urls: receiptUrls,
+      };
+
       const { error } = await supabase
         .from('expense_requests')
-        .insert({
-          user_id: session.user.id,
-          type: 'expense',
-          amount: formData.get('amount'),
-          department: formData.get('department'),
-          transaction_date: formData.get('transactionDate'),
-          payment_type: formData.get('paymentType'),
-          reason: formData.get('reason'),
-          receipt_urls: receiptUrls,
-        });
+        .insert(expenseData);
 
       if (error) throw error;
 
