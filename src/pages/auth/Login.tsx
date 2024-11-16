@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import bcrypt from "bcryptjs";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -19,15 +20,16 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      // Get user from database
+      const { data: user, error: userError } = await supabase
         .from("users")
         .select("*")
         .eq("email", email)
         .single();
 
-      if (error) throw error;
+      if (userError) throw userError;
 
-      if (!data) {
+      if (!user) {
         toast({
           title: "Error",
           description: "Invalid credentials",
@@ -36,15 +38,32 @@ export const Login = () => {
         return;
       }
 
-      // In a real app, you'd hash the password and compare with password_hash
-      // This is just for demonstration
-      if (data.password_hash === password && data.role === "admin") {
-        localStorage.setItem("user", JSON.stringify(data));
+      // Compare password hash
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+
+      if (!isValidPassword) {
+        toast({
+          title: "Error",
+          description: "Invalid credentials",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create session using Supabase's built-in session management
+      const { data: session, error: sessionError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (sessionError) throw sessionError;
+
+      if (user.role === "admin") {
         navigate("/admin/settings");
       } else {
         toast({
           title: "Error",
-          description: "Invalid credentials or insufficient permissions",
+          description: "Insufficient permissions",
           variant: "destructive",
         });
       }
